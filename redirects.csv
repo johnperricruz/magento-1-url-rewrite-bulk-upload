@@ -1,0 +1,2 @@
+url_from,url_to,redirect_type,is_redirect_only_error_page,comments,is_active,store_id
+request_path,../,301,0,template,1,0
