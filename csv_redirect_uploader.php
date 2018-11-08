@@ -32,14 +32,16 @@
 
         $total = 0;
         $totalSuccess = 0;
-        $totalUpdates = 0;
+        $totalDelete = 0;
         $length =  0;
         $delimiter = ',';
         $enclosure = '"';
         $escape = '\\';
         $skipline = 1; //Skip line 1
 
-       if (($fp = fopen($filename, 'r'))) {
+        $rewrite = Mage::getModel('core/url_rewrite');
+
+         if (($fp = fopen($filename, 'r'))) {
             while (($line = fgetcsv($fp, $length, $delimiter, $enclosure, $escape))) {
 
                 $total++;
@@ -50,21 +52,22 @@
                 $requestPath = $line[0];
                 $targetPath = $line[1];
 
-                $rewrite = Mage::getModel('core/url_rewrite');
+               
 
                 /**
                  * Dev note : This script will update duplicated request_path;
                  *
                  */
 
-                foreach($rewrite->getCollection() as $existing){
-                	if($existing['request_path'] == $requestPath){
-                		$existing->delete();
-                		$totalUpdates++;
-                	}
+                $existing = $rewrite->loadByRequestPath($requestPath);
+                if(!empty($existing)){
+                  if($existing['request_path'] == $requestPath){
+                    $existing->delete();
+                    $totalDelete++;
+                  }
                 }
 
-           		$rewrite->setIdPath(uniqid())
+           		 $rewrite->setIdPath(uniqid())
                     ->setTargetPath($targetPath)
                     ->setOptions('RP')
                     ->setDescription('Uploaded via script.')
@@ -85,9 +88,8 @@
              //unlink($filename);
 
            
-           	if($totalUpdates > 0){
-           		echo PHP_EOL.''.$totalSuccess - $totalUpdates.' URL rewrites have been imported.'.PHP_EOL;
-           		echo $totalUpdates.' URL rewrites have been updated.'.PHP_EOL;
+           	if($totalDelete > 0){
+           		echo $totalDelete.' URL rewrites have been deleted due to duplicates from your csv, please run the script again to update.'.PHP_EOL;
            	}else{
            		echo PHP_EOL.''.$totalSuccess.' URL rewrites have been imported.'.PHP_EOL;
            	}
